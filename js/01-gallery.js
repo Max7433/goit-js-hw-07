@@ -1,47 +1,59 @@
 import { galleryItems } from "./gallery-items.js";
 
-console.log(galleryItems);
-// Change code below this line
 
 const gallery = document.querySelector(".gallery");
-const items = [];
 
-galleryItems.forEach((element) => {
-  const galleryItem = document.createElement("div");
-  galleryItem.className = "gallery__item";
-  const galleryLink = document.createElement("a");
-  galleryLink.className = "gallery__link";
-  galleryLink.href = element.original;
-  const galleryImage = document.createElement("img");
-  galleryImage.className = "gallery__image";
-  galleryImage.src = element.preview;
-  galleryImage.setAttribute("data-source", element.original);
-  galleryImage.alt = element.description;
+gallery.insertAdjacentHTML("beforeend", renderGalleryItems(galleryItems));
 
-  galleryItem.append(galleryLink);
-  galleryLink.append(galleryImage);
-  items.push(galleryItem);
-});
+function renderGalleryItems(galleryItems) {
+  return galleryItems
+    .map(
+      ({ preview, original, description }) =>
+        `<div class="gallery__item">
+        <a class="gallery__link" href="${original}">
+        <img
+        class="gallery__image"
+        src="${preview}"
+        data-source="${original}"
+        alt='${description}'
+        />
+        </a>
+    </div>`
+    )
+    .join("");
+}
 
-gallery.append(...items);
+gallery.addEventListener("click", onImageClick);
+console.log(gallery);
 
-gallery.addEventListener("click", (e) => {
-  e.preventDefault();
-  if (e.target.nodeName !== "IMG") {
+function onImageClick(evt) {
+  if (evt.target.nodeName !== "IMG") {
     return;
   }
+  evt.preventDefault();
 
-  const selectedImage = e.target.getAttribute("data-source");
+  const markup = `<img 
+    class="gallery__img" 
+    src = "${evt.target.dataset.source}"
+    alt = "${evt.target.alt}"
+    width="1280"
+    >`;
+  console.log(markup);
 
-  const instance = basicLightbox.create(`
-    <img src="${selectedImage}" width="800" height="600">
-`);
+  const instance = basicLightbox.create(markup, {
+    onShow: () => {
+      addEventListener("keydown", closeOnHotKey);
+    },
+    onClose: () => {
+      removeEventListener("keydown", closeOnHotKey);
+    },
+  });
 
   instance.show();
 
-  gallery.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
+  function closeOnHotKey(event) {
+    if (event.code === "Escape") {
       instance.close();
     }
-  });
-});
+  }
+}
